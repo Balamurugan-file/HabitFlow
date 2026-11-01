@@ -460,13 +460,31 @@ async function setStatus(habit, date, status) {
     setEntries((prev) => prev.filter((e) => e.habit_id !== habit.id));
     notify("Habit deleted");
   }
-  async function signOut() {
-    if (session) await supabase.auth.signOut();
-    setSession(null);
-    setDemo(false);
-    setHabits(seedHabits);
-    setEntries([]);
+
+function signOut() {
+  // Immediately update the UI
+  const hadSession = Boolean(session);
+
+  setSession(null);
+  setDemo(false);
+  setHabits(seedHabits);
+  setEntries([]);
+
+  // Clear Supabase local session in the background
+  if (hadSession && supabase) {
+    supabase.auth
+      .signOut({ scope: "local" })
+      .then(({ error }) => {
+        if (error) {
+          console.error("Logout error:", error.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+      });
   }
+}
+
   function exportExcel() {
     import("xlsx").then((XLSX) => {
       const rows = habits.map((h) => ({
@@ -1036,17 +1054,22 @@ async function setStatus(habit, date, status) {
                   </div>
                 )}
               </article>
+
               <article className="insight-card streak-card">
                 <div className="insight-card-title">
                   <Flame size={19} />
-                  <h3>Current Streaks</h3>
+                  <h3>Monthly Completed Days</h3>
                 </div>
+
                 {searchedRates.map((h) => (
                   <div className="rank-row" key={h.id}>
                     <span>
                       {h.icon} {h.name}
                     </span>
-                    <b>{streakFor(h, entries)} days</b>
+
+                    <b>
+                      {h.doneCount}/{days} days
+                    </b>
                   </div>
                 ))}
               </article>
@@ -1131,23 +1154,59 @@ async function setStatus(habit, date, status) {
   );
 }
 
+
 function streakFor(habit, entries) {
-  const done = new Set(
+  // Get all completed dates for this habit
+  const doneDates = new Set(
     entries
-      .filter((e) => e.habit_id === habit.id && e.status === "done")
-      .map((e) => e.date),
+      .filter(
+        (entry) =>
+          entry.habit_id === habit.id &&
+          entry.status === "done"
+      )
+      .map((entry) =>
+        typeof entry.date === "string"
+          ? entry.date.slice(0, 10)
+          : ""
+      )
+      .filter(Boolean)
   );
-  let count = 0,
-    d = new Date();
-  for (let i = 0; i < 365; i++) {
-    const key = dateKey(d);
-    if (done.has(key)) {
-      count++;
-      d.setDate(d.getDate() - 1);
-    } else if (i === 0) {
-      d.setDate(d.getDate() - 1);
-    } else break;
+
+  if (doneDates.size === 0) return 0;
+
+  // Find the latest completed date
+  const sortedDates = [...doneDates].sort(
+    (a, b) => b.localeCompare(a)
+  );
+
+  let currentDate = new Date(
+    sortedDates[0] + "T12:00:00"
+  );
+
+  let streak = 0;
+
+  // Count consecutive completed days backwards
+  while (true) {
+    const year = currentDate.getFullYear();
+    const month = String(
+      currentDate.getMonth() + 1
+    ).padStart(2, "0");
+    const day = String(
+      currentDate.getDate()
+    ).padStart(2, "0");
+
+    const dateString = `${year}-${month}-${day}`;
+
+    if (!doneDates.has(dateString)) break;
+
+    streak++;
+
+    currentDate.setDate(
+      currentDate.getDate() - 1
+    );
   }
-  return count;
+
+  return streak;
 }
+
 export default App;
