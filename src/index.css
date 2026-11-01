@@ -1951,3 +1951,58 @@ textarea:focus-visible {
   }
 }
 
+
+/* =========================================
+   DARK MODE - MONTH BUTTON HOVER FIX
+========================================= */
+
+.dark .month-chip,
+.dark .icon-btn {
+  background: #252d4b;
+  color: #eef1ff;
+  border: 1px solid #414c70;
+  transition: all 0.2s ease;
+}
+
+/* Hover */
+.dark .month-chip:hover,
+.dark .icon-btn:hover {
+  background: #414078 !important;
+  color: #ffffff !important;
+  border-color: #9388ff !important;
+  box-shadow: 0 0 0 3px #8175ff20;
+  transform: translateY(-2px);
+}
+
+/* Click / Active */
+.dark .month-chip:active,
+.dark .icon-btn:active {
+  background: #5146a5 !important;
+  color: #ffffff !important;
+  transform: translateY(1px);
+}
+
+/* Focus */
+.dark .month-chip:focus-visible,
+.dark .icon-btn:focus-visible {
+  outline: 2px solid #a99fff;
+  outline-offset: 3px;
+}
+
+/* Calendar icons */
+.dark .month-chip svg,
+.dark .icon-btn svg {
+  color: #b9b1ff;
+}
+
+/* Disabled month button */
+.dark .month-chip:disabled {
+  background: #202640 !important;
+  color: #7883a5 !important;
+  border-color: #343c59 !important;
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
