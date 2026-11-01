@@ -1529,9 +1529,6 @@ textarea:focus-visible {
     width: 38px;
     height: 38px;
   }
-  .top-actions .month-chip:nth-child(2) {
-    display: none;
-  }
   .top-actions .btn3d {
     padding: 9px 10px;
   }
