@@ -1529,6 +1529,7 @@ textarea:focus-visible {
     width: 38px;
     height: 38px;
   }
+
   .top-actions .btn3d {
     padding: 9px 10px;
   }
@@ -2005,4 +2006,286 @@ textarea:focus-visible {
   transform: none;
   box-shadow: none;
 }
+
+
+/* =========================================
+   ADD NEW HABIT - MODERN MODAL DESIGN
+========================================= */
+
+.dialog {
+  width: min(100%, 460px);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 22px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7f0;
+  box-shadow: 0 25px 70px rgba(31, 41, 75, 0.18);
+  animation: habitModalIn 0.25s ease-out;
+}
+
+@keyframes habitModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal heading */
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 15px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #edf0f6;
+}
+
+.dialog-head h2 {
+  font-size: 19px;
+  font-weight: 800;
+  color: #172554;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.dialog-head p {
+  font-size: 11px;
+  color: #8190aa;
+  margin: 5px 0 0;
+}
+
+/* Form layout */
+
+.dialog form {
+  display: grid;
+  gap: 15px;
+}
+
+.dialog label {
+  display: grid;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #34415f;
+}
+
+/* Inputs and dropdowns */
+
+.dialog input,
+.dialog select,
+.dialog textarea {
+  width: 100%;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid #dce3f0;
+  border-radius: 11px;
+  background: #fbfcff;
+  color: #172554;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.dialog input::placeholder,
+.dialog textarea::placeholder {
+  color: #a2acc0;
+}
+
+.dialog input:hover,
+.dialog select:hover,
+.dialog textarea:hover {
+  border-color: #aaa0ff;
+}
+
+.dialog input:focus,
+.dialog select:focus,
+.dialog textarea:focus {
+  outline: none;
+  border-color: #7567f5;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(117, 103, 245, 0.12);
+}
+
+/* Icon selection grid */
+
+.dialog .icon-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dialog .icon-grid button {
+  min-width: 0;
+  height: 43px;
+  border: 1px solid #dce4f2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #263858;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.dialog .icon-grid button:hover {
+  background: #f1efff;
+  border-color: #9c91ff;
+  color: #6859ed;
+  transform: translateY(-2px);
+}
+
+.dialog .icon-grid button.active,
+.dialog .icon-grid button.selected {
+  background: linear-gradient(135deg, #7869f5, #5e50dc);
+  border-color: #6859ed;
+  color: #ffffff;
+  box-shadow: 0 3px 0 #4940b5;
+}
+
+/* Form footer */
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding-top: 15px;
+  margin-top: 5px;
+  border-top: 1px solid #edf0f6;
+}
+
+.dialog-actions .btn3d {
+  min-height: 40px;
+  padding: 10px 17px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+/* Cancel button */
+
+.dialog-actions .btn-ghost {
+  background: #f5f7fc;
+  color: #566481;
+  border: 1px solid #e0e6f1;
+}
+
+/* Save button */
+
+.dialog-actions .btn3d:not(.btn-ghost) {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 3px 0 #047857;
+}
+
+.dialog-actions .btn3d:not(.btn-ghost):hover {
+  filter: brightness(1.08);
+}
+
+/* Mobile responsive */
+
+@media (max-width: 480px) {
+  .dialog {
+    width: 100%;
+    max-height: 88vh;
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .dialog-head h2 {
+    font-size: 17px;
+  }
+
+  .dialog .icon-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .dialog .icon-grid button {
+    height: 42px;
+  }
+
+  .dialog-actions {
+    position: sticky;
+    bottom: -18px;
+    background: #ffffff;
+    padding: 13px 0 4px;
+  }
+}
+
+/* =========================================
+   DARK MODE
+========================================= */
+
+.dark .dialog {
+  background: #1c2340;
+  border-color: #343e61;
+}
+
+.dark .dialog-head {
+  border-color: #343e61;
+}
+
+.dark .dialog-head h2,
+.dark .dialog label {
+  color: #eef1ff;
+}
+
+.dark .dialog-head p {
+  color: #a4afd0;
+}
+
+.dark .dialog input,
+.dark .dialog select,
+.dark .dialog textarea {
+  background: #252d4b;
+  color: #eef1ff;
+  border-color: #414c70;
+}
+
+.dark .dialog input::placeholder {
+  color: #8792b1;
+}
+
+.dark .dialog input:focus,
+.dark .dialog select:focus,
+.dark .dialog textarea:focus {
+  border-color: #9487ff;
+  background: #252d4b;
+  box-shadow: 0 0 0 3px #9487ff20;
+}
+
+.dark .dialog .icon-grid button {
+  background: #252d4b;
+  border-color: #414c70;
+  color: #dce2ff;
+}
+
+.dark .dialog .icon-grid button:hover {
+  background: #393663;
+  border-color: #9487ff;
+  color: #ffffff;
+}
+
+.dark .dialog .icon-grid button.active,
+.dark .dialog .icon-grid button.selected {
+  background: linear-gradient(135deg, #7869f5, #5e50dc);
+  color: #ffffff;
+  border-color: #9487ff;
+}
+
+.dark .dialog-actions {
+  background: #1c2340;
+  border-color: #343e61;
+}
+
+.dark .dialog-actions .btn-ghost {
+  background: #252d4b;
+  color: #e0e5ff;
+  border-color: #414c70;
+}
+
 

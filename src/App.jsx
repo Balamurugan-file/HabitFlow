@@ -175,14 +175,39 @@ function App() {
   useEffect(() => {
     if (session?.user) loadData();
   }, [session?.user?.id]);
-  async function loadData() {
-    const [{ data: h, error: he }, { data: e, error: ee }] = await Promise.all([
-      supabase.from("habits").select("*").order("created_at"),
-      supabase.from("habit_entries").select("*"),
-    ]);
-    if (!he && h) setHabits(h);
-    if (!ee && e) setEntries(e);
+
+async function loadData() {
+  if (!session?.user) return;
+
+  const userId = session.user.id;
+
+  const [
+    { data: habitsData, error: habitsError },
+    { data: entriesData, error: entriesError },
+  ] = await Promise.all([
+    supabase.from("habits").select("*").order("created_at"),
+
+    supabase
+      .from("habit_entries")
+      .select("*")
+      .eq("user_id", userId)
+      .in("status", ["done", "missed"]),
+  ]);
+
+  if (habitsError) {
+    notify(habitsError.message);
+    return;
   }
+
+  if (entriesError) {
+    notify(entriesError.message);
+    return;
+  }
+
+  setHabits(habitsData || []);
+  setEntries(entriesData || []);
+}
+
   const monthId = format(month, "yyyy-MM");
   const days = getMonthDays(month);
   const filteredHabits = habits.filter((h) =>
@@ -292,50 +317,99 @@ function App() {
     setEditing(null);
     notify(editing ? "Habit updated" : "Habit added");
   }
-  async function setStatus(habit, date, status) {
-    const old = statusFor(habit.id, date);
-    const next =
-      status ||
-      statusCycle[(statusCycle.indexOf(old) + 1) % statusCycle.length];
-    const previous = entries.find(
-      (e) => e.habit_id === habit.id && e.date === date,
+
+  
+async function setStatus(habit, date, status) {
+  const oldStatus = statusFor(habit.id, date);
+
+  const nextStatus =
+    status ||
+    statusCycle[(statusCycle.indexOf(oldStatus) + 1) % statusCycle.length];
+
+  // Find existing record
+  const previous = entries.find(
+    (e) => e.habit_id === habit.id && e.date === date,
+  );
+
+  // =====================================
+  // CASE 1: PENDING - DELETE FROM BACKEND
+  // =====================================
+
+  if (nextStatus === "pending") {
+    // Update frontend immediately
+    setEntries((prev) =>
+      prev.filter((e) => !(e.habit_id === habit.id && e.date === date)),
     );
-    const optimistic = previous
-      ? entries.map((e) => (e.id === previous.id ? { ...e, status: next } : e))
-      : [
-          ...entries,
-          {
-            id: `local-${habit.id}-${date}`,
-            habit_id: habit.id,
-            date,
-            status: next,
-          },
-        ];
-    setEntries(optimistic);
+
+    // Delete from Supabase
     if (session?.user) {
-      const payload = {
-        habit_id: habit.id,
-        date,
-        status: next,
-        user_id: session.user.id,
-      };
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("habit_entries")
-        .upsert(payload, { onConflict: "habit_id,date" })
-        .select()
-        .single();
+        .delete()
+        .eq("habit_id", habit.id)
+        .eq("date", date)
+        .eq("user_id", session.user.id);
+
       if (error) {
-        setEntries((prev) =>
-          prev.filter((e) => !(e.habit_id === habit.id && e.date === date)),
-        );
-        notify(error.message);
-      } else
-        setEntries((prev) => [
-          ...prev.filter((e) => !(e.habit_id === habit.id && e.date === date)),
-          data,
-        ]);
+        notify(`Reset failed: ${error.message}`);
+        await loadData();
+        return;
+      }
     }
+
+    notify("Habit reset to Pending");
+    return;
   }
+
+  // =====================================
+  // CASE 2: DONE OR MISSED
+  // =====================================
+
+  // Optimistic frontend update
+  const localEntry = {
+    id: previous?.id || `local-${habit.id}-${date}`,
+    habit_id: habit.id,
+    date,
+    status: nextStatus,
+    ...(session?.user ? { user_id: session.user.id } : {}),
+  };
+
+  setEntries((prev) => [
+    ...prev.filter((e) => !(e.habit_id === habit.id && e.date === date)),
+    localEntry,
+  ]);
+
+  // Save ONLY done or missed to Supabase
+  if (session?.user) {
+    const payload = {
+      user_id: session.user.id,
+      habit_id: habit.id,
+      date,
+      status: nextStatus,
+    };
+
+    const { data, error } = await supabase
+      .from("habit_entries")
+      .upsert(payload, {
+        onConflict: "habit_id,date",
+      })
+      .select()
+      .single();
+
+    if (error) {
+      notify(`Save failed: ${error.message}`);
+      await loadData();
+      return;
+    }
+
+    // Replace temporary frontend record with database record
+    setEntries((prev) => [
+      ...prev.filter((e) => !(e.habit_id === habit.id && e.date === date)),
+      data,
+    ]);
+  }
+}
+
   async function markAllCompleted(date) {
     if (!habits.length) return;
     const rows = habits.map((h) => ({
